@@ -43,6 +43,17 @@
         <span class="nav-label">{link.label}</span>
       </a>
     {/each}
+    {#if $page.url.pathname.startsWith("/clients/") && $page.url.pathname.split("/").length >= 4}
+      <div class="nav-divider"></div>
+      <a
+        href={$page.url.pathname + "/website"}
+        class="nav-item sub-nav"
+        class:active={$page.url.pathname.endsWith("/website")}
+      >
+        <span class="nav-icon">🌐</span>
+        <span class="nav-label">Website Builder</span>
+      </a>
+    {/if}
   </nav>
   <div class="sidebar-footer">
     {#if user}
@@ -106,4 +117,7 @@
     transition: all 0.2s;
   }
   .logout-btn:hover { background: #7f1d1d; color: #fecaca; }
+  .nav-divider { height: 1px; background: #334155; margin: 0.25rem 0.75rem; }
+  .sub-nav { padding-left: 2rem !important; font-size: 0.8rem !important; color: #94a3b8 !important; }
+  .sub-nav.active { color: #38bdf8 !important; background: rgba(56, 189, 248, 0.08) !important; }
 </style>

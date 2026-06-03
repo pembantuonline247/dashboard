@@ -43,6 +43,7 @@
         <button class="btn btn-primary" onclick={linkWhatsApp}>
           📱 Link WhatsApp
         </button>
+        <a href="/clients/{$page.params.id}/website" class="btn btn-primary">🌐 Website</a>
         <button class="btn btn-danger" onclick={deleteClient}>Delete</button>
       </div>
     </header>
