@@ -2,6 +2,7 @@
   import { api } from "$lib/api";
   import type { ChatMessage } from "$lib/types";
 
+  let { clientId = "" }: { clientId: string } = $props();
   let open = $state(false);
   let messages: ChatMessage[] = $state([]);
   let input = $state("");
@@ -29,8 +30,8 @@
     sending = true;
 
     try {
-      const reply = await api.sendChat(text);
-      messages = [...messages, reply];
+      const res = await api.sendChat(clientId, text);
+      messages = [...messages, { role: "assistant", content: res.reply }];
     } catch {
       messages = [...messages, { role: "assistant", content: "Sorry, I encountered an error. Please try again." }];
     }

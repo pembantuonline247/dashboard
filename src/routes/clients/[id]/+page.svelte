@@ -44,6 +44,7 @@
           📱 Link WhatsApp
         </button>
         <a href="/clients/{$page.params.id}/website" class="btn btn-primary">🌐 Website</a>
+        <a href="/clients/{$page.params.id}/integrations" class="btn btn-primary">🔌 Integrations</a>
         <button class="btn btn-danger" onclick={deleteClient}>Delete</button>
       </div>
     </header>

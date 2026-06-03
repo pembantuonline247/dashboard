@@ -35,6 +35,14 @@ export const api = {
     if (!res.ok) throw new Error((await res.json()).error || "Login failed");
     return res.json();
   },
+  async clientLogin(email: string, password: string): Promise<{ token: string; user: any }> {
+    const res = await fetch(`${API}/auth/client-login`, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }), credentials: "include",
+    });
+    if (!res.ok) throw new Error((await res.json()).error || "Login failed");
+    return res.json();
+  },
   async getMe(): Promise<{ user: User }> { return fetchJson(`${API}/auth/me`); },
   async logout(): Promise<void> {
     await fetch(`${API}/auth/logout`, { method: "POST", credentials: "include" });

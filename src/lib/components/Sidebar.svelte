@@ -53,6 +53,14 @@
         <span class="nav-icon">🌐</span>
         <span class="nav-label">Website Builder</span>
       </a>
+      <a
+        href={$page.url.pathname + "/integrations"}
+        class="nav-item sub-nav"
+        class:active={$page.url.pathname.endsWith("/integrations")}
+      >
+        <span class="nav-icon">🔌</span>
+        <span class="nav-label">Integrations</span>
+      </a>
     {/if}
   </nav>
   <div class="sidebar-footer">
