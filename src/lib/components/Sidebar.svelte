@@ -1,11 +1,28 @@
 <script lang="ts">
   import { page } from "$app/stores";
-  const links = [
+  import { logout } from "$lib/auth";
+  import type { User } from "$lib/types";
+
+  let { user }: { user: User | null } = $props();
+
+  const adminLinks = [
     { href: "/", label: "Dashboard", icon: "📊" },
     { href: "/clients", label: "Clients", icon: "👥" },
     { href: "/billing", label: "Billing", icon: "💰" },
     { href: "/settings", label: "Settings", icon: "⚙️" },
   ];
+
+  const clientLinks = [
+    { href: "/client", label: "My Bot", icon: "🤖" },
+    { href: "/client/invoices", label: "My Invoices", icon: "💰" },
+  ];
+
+  const links = user?.role === "admin" ? adminLinks : user?.role === "client" ? clientLinks : [];
+
+  async function handleLogout() {
+    await logout();
+    window.location.href = "/login";
+  }
 </script>
 
 <aside class="sidebar">
@@ -18,7 +35,7 @@
       <a
         href={link.href}
         class="nav-item"
-        class:active={$page.url.pathname === link.href}
+        class:active={$page.url.pathname === link.href || (link.href !== "/" && $page.url.pathname.startsWith(link.href))}
       >
         <span class="nav-icon">{link.icon}</span>
         <span class="nav-label">{link.label}</span>
@@ -26,30 +43,31 @@
     {/each}
   </nav>
   <div class="sidebar-footer">
-    <div class="server-status">
-      <span class="status-dot"></span>
-      <span>Kamatera SG</span>
-    </div>
+    {#if user}
+      <div class="user-info">
+        <div class="user-avatar">{user.role === "admin" ? "A" : "C"}</div>
+        <div class="user-details">
+          <span class="user-name">{user.name || user.sub}</span>
+          <span class="user-role">{user.role}</span>
+        </div>
+      </div>
+    {/if}
+    <button onclick={handleLogout} class="logout-btn">
+      <span>🚪</span>
+      <span>Sign Out</span>
+    </button>
   </div>
 </aside>
 
 <style>
   .sidebar {
-    width: 240px;
-    height: 100vh;
-    background: #1e293b;
-    border-right: 1px solid #334155;
-    display: flex;
-    flex-direction: column;
-    position: fixed;
-    left: 0;
-    top: 0;
+    width: 240px; height: 100vh;
+    background: #1e293b; border-right: 1px solid #334155;
+    display: flex; flex-direction: column;
+    position: fixed; left: 0; top: 0;
   }
   .logo {
-    padding: 1.5rem;
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
+    padding: 1.5rem; display: flex; align-items: center; gap: 0.75rem;
     border-bottom: 1px solid #334155;
   }
   .logo-icon { font-size: 1.5rem; }
@@ -65,14 +83,29 @@
   .nav-item.active { background: rgba(56, 189, 248, 0.1); color: #38bdf8; }
   .nav-icon { font-size: 1.125rem; width: 1.5rem; text-align: center; }
   .sidebar-footer {
-    padding: 1rem 1.25rem;
+    padding: 0.75rem;
     border-top: 1px solid #334155;
+    display: flex; flex-direction: column; gap: 0.5rem;
   }
-  .server-status {
+  .user-info {
+    display: flex; align-items: center; gap: 0.6rem;
+    padding: 0.5rem; border-radius: 8px;
+  }
+  .user-avatar {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: linear-gradient(135deg, #6366f1, #ec4899);
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-size: 0.8rem; font-weight: 700;
+  }
+  .user-details { display: flex; flex-direction: column; }
+  .user-name { font-size: 0.8rem; font-weight: 600; color: #e2e8f0; }
+  .user-role { font-size: 0.65rem; text-transform: uppercase; color: #64748b; letter-spacing: 0.05em; }
+  .logout-btn {
     display: flex; align-items: center; gap: 0.5rem;
-    font-size: 0.75rem; color: #64748b;
+    padding: 0.5rem; border-radius: 8px;
+    background: none; border: none; color: #94a3b8;
+    font-size: 0.8rem; cursor: pointer; width: 100%;
+    transition: all 0.2s;
   }
-  .status-dot {
-    width: 6px; height: 6px; border-radius: 50%; background: #22c55e;
-  }
+  .logout-btn:hover { background: #7f1d1d; color: #fecaca; }
 </style>

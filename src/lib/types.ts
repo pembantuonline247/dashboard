@@ -1,3 +1,9 @@
+export interface User {
+  role: "admin" | "client";
+  sub: string;
+  name?: string;
+}
+
 export interface Client {
   id: string;
   name: string;
