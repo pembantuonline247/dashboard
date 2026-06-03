@@ -1,4 +1,4 @@
-import type { Client, SystemStats, Invoice, User, Product, Subscription, UsageData, WhatsAppConfig, ChatMessage } from "./types";
+import type { Client, SystemStats, Invoice, User, UsageData, UsageLogEntry, Product, Subscription, WhatsAppConfig } from "./types";
 
 const API = "/api";
 
@@ -27,101 +27,62 @@ async function fetchJson<T>(url: string, opts?: RequestInit): Promise<T> {
 }
 
 export const api = {
-  // Auth
   async login(email: string, password: string): Promise<{ token: string; user: User }> {
     const res = await fetch(`${API}/auth/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
-      credentials: "include",
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }), credentials: "include",
     });
     if (!res.ok) throw new Error((await res.json()).error || "Login failed");
     return res.json();
   },
-
-  async getMe(): Promise<{ user: User }> {
-    return fetchJson(`${API}/auth/me`);
-  },
-
+  async getMe(): Promise<{ user: User }> { return fetchJson(`${API}/auth/me`); },
   async logout(): Promise<void> {
     await fetch(`${API}/auth/logout`, { method: "POST", credentials: "include" });
+    localStorage.removeItem("token");
   },
 
-  // System
-  async getStats(): Promise<SystemStats> {
-    return fetchJson(`${API}/_openclaw/system/stats`);
-  },
-
-  // Clients
-  async getClients(): Promise<Client[]> {
-    return fetchJson(`${API}/clients`);
-  },
-  async getClient(id: string): Promise<Client> {
-    return fetchJson(`${API}/clients/${id}`);
-  },
+  async getStats(): Promise<SystemStats> { return fetchJson(`${API}/_openclaw/system/stats`); },
+  async getClients(): Promise<Client[]> { return fetchJson(`${API}/clients`); },
+  async getClient(id: string): Promise<Client> { return fetchJson(`${API}/clients/${id}`); },
   async createClient(data: Partial<Client>): Promise<Client> {
     return fetchJson(`${API}/clients`, { method: "POST", body: JSON.stringify(data) });
   },
   async deleteClient(id: string): Promise<void> {
     await fetch(`${API}/clients/${id}`, { method: "DELETE", headers: getHeaders(), credentials: "include" });
   },
-
-  // Invoices
-  async getInvoices(): Promise<Invoice[]> {
-    return fetchJson(`${API}/invoices`);
-  },
-
-  // WhatsApp QR
-  async getWhatsAppQR(clientId: string): Promise<{ qr: string }> {
-    return fetchJson(`${API}/clients/${clientId}/whatsapp/qr`);
-  },
+  async getInvoices(): Promise<Invoice[]> { return fetchJson(`${API}/invoices`); },
+  async getWhatsAppQR(clientId: string): Promise<{ qr: string }> { return fetchJson(`${API}/clients/${clientId}/whatsapp/qr`); },
 
   // Products & Subscriptions
-  async getProducts(): Promise<Product[]> {
-    return fetchJson(`${API}/products`);
-  },
-  async getSubscriptions(clientId: string): Promise<Subscription[]> {
-    return fetchJson(`${API}/subscriptions/${clientId}`);
-  },
-  async createSubscription(clientId: string, productId: string, planType?: string): Promise<Subscription> {
-    return fetchJson(`${API}/subscriptions`, {
-      method: "POST",
-      body: JSON.stringify({ client_id: clientId, product_id: productId, plan_type: planType }),
-    });
+  async getProducts(): Promise<Product[]> { return fetchJson(`${API}/products`); },
+  async getSubscriptions(clientId: string): Promise<Subscription[]> { return fetchJson(`${API}/subscriptions/${clientId}`); },
+  async createSubscription(data: { client_id: string; product_id: string; plan_type?: string }): Promise<Subscription> {
+    return fetchJson(`${API}/subscriptions`, { method: "POST", body: JSON.stringify(data) });
   },
 
   // Usage
-  async getUsage(clientId: string): Promise<UsageData> {
-    return fetchJson(`${API}/usage/${clientId}`);
+  async getUsage(clientId: string): Promise<UsageData> { return fetchJson(`${API}/usage/${clientId}`); },
+  async getUsageLogs(clientId: string): Promise<{ logs: UsageLogEntry[]; totals: any }> {
+    return fetchJson(`${API}/usage/logs/${clientId}`);
+  },
+  async recordUsage(data: { client_id: string; credit_type: string; amount: number }): Promise<any> {
+    return fetchJson(`${API}/usage/record`, { method: "POST", body: JSON.stringify(data) });
   },
 
-  // WhatsApp Config
-  async getWhatsAppConfig(clientId: string): Promise<WhatsAppConfig> {
-    return fetchJson(`${API}/whatsapp/config/${clientId}`);
-  },
-  async saveWhatsAppConfig(clientId: string, config: { whatsapp: string; auto_reconnect?: boolean; reconnect_interval_minutes?: number }): Promise<{ ok: boolean }> {
-    return fetchJson(`${API}/whatsapp/config/${clientId}`, {
-      method: "POST",
-      body: JSON.stringify(config),
-    });
+  // WhatsApp
+  async getWhatsAppConfig(clientId: string): Promise<WhatsAppConfig> { return fetchJson(`${API}/whatsapp/config/${clientId}`); },
+  async saveWhatsAppConfig(clientId: string, data: any): Promise<any> {
+    return fetchJson(`${API}/whatsapp/config/${clientId}`, { method: "POST", body: JSON.stringify(data) });
   },
 
   // Chat
-  async sendChat(message: string, clientId?: string): Promise<ChatMessage> {
-    return fetchJson(`${API}/chat`, {
-      method: "POST",
-      body: JSON.stringify({ message, client_id: clientId }),
-    });
+  async sendChat(clientId: string, message: string): Promise<any> {
+    return fetchJson(`${API}/chat`, { method: "POST", body: JSON.stringify({ client_id: clientId, message }) });
   },
 
   // Stripe
-  async getStripeConfig(): Promise<{ publishableKey: string; currency: string; paymentMethods: string[] }> {
-    return fetchJson(`${API}/stripe/config`);
+  async getStripeConfig(): Promise<any> { return fetchJson(`${API}/stripe/config`); },
+  async createCheckoutSession(data: { client_id: string; amount: number; description: string }): Promise<any> {
+    return fetchJson(`${API}/stripe/create-checkout`, { method: "POST", body: JSON.stringify(data) });
   },
-  async createCheckoutSession(clientId: string, amount: number, description?: string): Promise<{ url: string }> {
-    return fetchJson(`${API}/stripe/create-checkout`, {
-      method: "POST",
-      body: JSON.stringify({ client_id: clientId, amount, description }),
-    });
-  }
 };

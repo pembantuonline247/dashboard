@@ -36,50 +36,61 @@ export interface Invoice {
   dueDate: string;
 }
 
+export interface UsageData {
+  ai_used: string;
+  ai_remaining: string;
+}
+
+export interface UsageLogEntry {
+  id: string;
+  client_id: string;
+  model: string;
+  session_id: string;
+  input_tokens: number;
+  output_tokens: number;
+  total_tokens: number;
+  credits_consumed: string;
+  endpoint: string;
+  tier: string;
+  created_at: string;
+}
+
 export interface Product {
   id: string;
   name: string;
+  type: "plan" | "addon";
   description: string;
-  price: number;
+  price: string;
   currency: string;
   billing_interval: string;
   credits_included: number;
-  features: string[];
-  category: string;
+  features: Record<string, any>;
   sort_order: number;
   active: boolean;
-  stripe_price_id?: string;
 }
 
 export interface Subscription {
   id: string;
   client_id: string;
   product_id: string;
-  product_name: string;
   plan_type: string;
-  price: number;
+  status: string;
+  product_name: string;
+  price: string;
   billing_interval: string;
   credits_included: number;
-  features: string[];
-  status: string;
   start_date: string;
   end_date: string;
-  created_at: string;
-}
-
-export interface UsageData {
-  ai_used: number;
-  ai_remaining: number;
 }
 
 export interface WhatsAppConfig {
-  whatsapp: string | null;
+  whatsapp: string;
   whatsapp_connected: boolean;
-  status: string | null;
+  status: string;
 }
 
 export interface ChatMessage {
   role: "user" | "assistant";
   content: string;
-  timestamp?: string;
+  timestamp: string;
 }
