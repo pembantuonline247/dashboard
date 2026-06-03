@@ -8,6 +8,8 @@
   const adminLinks = [
     { href: "/", label: "Dashboard", icon: "📊" },
     { href: "/clients", label: "Clients", icon: "👥" },
+    { href: "/subscriptions", label: "AI Credits", icon: "🤖" },
+    { href: "/whatsapp", label: "WhatsApp", icon: "📱" },
     { href: "/billing", label: "Billing", icon: "💰" },
     { href: "/settings", label: "Settings", icon: "⚙️" },
   ];
@@ -87,19 +89,15 @@
     border-top: 1px solid #334155;
     display: flex; flex-direction: column; gap: 0.5rem;
   }
-  .user-info {
-    display: flex; align-items: center; gap: 0.6rem;
-    padding: 0.5rem; border-radius: 8px;
-  }
+  .user-info { display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem; }
   .user-avatar {
     width: 32px; height: 32px; border-radius: 50%;
-    background: linear-gradient(135deg, #6366f1, #ec4899);
-    display: flex; align-items: center; justify-content: center;
-    color: white; font-size: 0.8rem; font-weight: 700;
+    background: #334155; display: flex; align-items: center; justify-content: center;
+    font-size: 0.8rem; font-weight: 700; color: #38bdf8;
   }
   .user-details { display: flex; flex-direction: column; }
-  .user-name { font-size: 0.8rem; font-weight: 600; color: #e2e8f0; }
-  .user-role { font-size: 0.65rem; text-transform: uppercase; color: #64748b; letter-spacing: 0.05em; }
+  .user-name { font-size: 0.8rem; color: #e2e8f0; font-weight: 600; }
+  .user-role { font-size: 0.7rem; color: #64748b; text-transform: capitalize; }
   .logout-btn {
     display: flex; align-items: center; gap: 0.5rem;
     padding: 0.5rem; border-radius: 8px;

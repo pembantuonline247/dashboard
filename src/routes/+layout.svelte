@@ -5,6 +5,7 @@
   import type { User } from "$lib/types";
   import "../app.css";
   import Sidebar from "$lib/components/Sidebar.svelte";
+  import ChatWidget from "$lib/components/ChatWidget.svelte";
 
   let { children }: { children: import("svelte").Snippet } = $props();
   let currentUser = $state<User | null>(null);
@@ -47,19 +48,18 @@
         {@render children()}
       </div>
     </main>
+    <ChatWidget />
   </div>
 {/if}
 
 <style>
   .loading-screen {
     display: flex; align-items: center; justify-content: center;
-    min-height: 100vh; background: #0f172a;
+    height: 100vh; background: #0f172a;
   }
   .spinner {
-    width: 32px; height: 32px;
-    border: 3px solid #334155;
-    border-top-color: #6366f1;
-    border-radius: 50%;
+    width: 36px; height: 36px; border: 3px solid #334155;
+    border-top-color: #38bdf8; border-radius: 50%;
     animation: spin 0.7s linear infinite;
   }
   @keyframes spin { to { transform: rotate(360deg); } }

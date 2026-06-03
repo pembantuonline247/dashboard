@@ -1,4 +1,4 @@
-import type { Client, SystemStats, Invoice, User } from "./types";
+import type { Client, SystemStats, Invoice, User, Product, Subscription, UsageData, WhatsAppConfig, ChatMessage } from "./types";
 
 const API = "/api";
 
@@ -74,5 +74,54 @@ export const api = {
   // WhatsApp QR
   async getWhatsAppQR(clientId: string): Promise<{ qr: string }> {
     return fetchJson(`${API}/clients/${clientId}/whatsapp/qr`);
+  },
+
+  // Products & Subscriptions
+  async getProducts(): Promise<Product[]> {
+    return fetchJson(`${API}/products`);
+  },
+  async getSubscriptions(clientId: string): Promise<Subscription[]> {
+    return fetchJson(`${API}/subscriptions/${clientId}`);
+  },
+  async createSubscription(clientId: string, productId: string, planType?: string): Promise<Subscription> {
+    return fetchJson(`${API}/subscriptions`, {
+      method: "POST",
+      body: JSON.stringify({ client_id: clientId, product_id: productId, plan_type: planType }),
+    });
+  },
+
+  // Usage
+  async getUsage(clientId: string): Promise<UsageData> {
+    return fetchJson(`${API}/usage/${clientId}`);
+  },
+
+  // WhatsApp Config
+  async getWhatsAppConfig(clientId: string): Promise<WhatsAppConfig> {
+    return fetchJson(`${API}/whatsapp/config/${clientId}`);
+  },
+  async saveWhatsAppConfig(clientId: string, config: { whatsapp: string; auto_reconnect?: boolean; reconnect_interval_minutes?: number }): Promise<{ ok: boolean }> {
+    return fetchJson(`${API}/whatsapp/config/${clientId}`, {
+      method: "POST",
+      body: JSON.stringify(config),
+    });
+  },
+
+  // Chat
+  async sendChat(message: string, clientId?: string): Promise<ChatMessage> {
+    return fetchJson(`${API}/chat`, {
+      method: "POST",
+      body: JSON.stringify({ message, client_id: clientId }),
+    });
+  },
+
+  // Stripe
+  async getStripeConfig(): Promise<{ publishableKey: string; currency: string; paymentMethods: string[] }> {
+    return fetchJson(`${API}/stripe/config`);
+  },
+  async createCheckoutSession(clientId: string, amount: number, description?: string): Promise<{ url: string }> {
+    return fetchJson(`${API}/stripe/create-checkout`, {
+      method: "POST",
+      body: JSON.stringify({ client_id: clientId, amount, description }),
+    });
   }
 };
