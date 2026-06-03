@@ -5,11 +5,36 @@
 
   let invoices: Invoice[] = $state([]);
   let loading = $state(true);
+  let paying = $state<string | null>(null);
 
   onMount(async () => {
     try { invoices = await api.getInvoices(); } catch {}
     loading = false;
   });
+
+  async function payNow(inv: Invoice) {
+    paying = inv.id;
+    try {
+      const res = await fetch("/api/stripe/create-checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          client_id: inv.clientId,
+          amount: inv.amount,
+          description: `Pembantu.Online - ${inv.clientName} Subscription`,
+        }),
+      });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        alert("Failed to create checkout: " + (data.error || "Unknown error"));
+      }
+    } catch (e) {
+      alert("Network error: " + (e as Error).message);
+    }
+    paying = null;
+  }
 </script>
 
 <div class="page">
@@ -43,15 +68,40 @@
     <div class="table-wrap">
       <table>
         <thead>
-          <tr><th>Client</th><th>Amount</th><th>Status</th><th>Due</th></tr>
+          <tr>
+            <th>Client</th>
+            <th>Amount</th>
+            <th>Status</th>
+            <th>Due</th>
+            <th></th>
+          </tr>
         </thead>
         <tbody>
           {#each invoices as inv}
             <tr>
               <td>{inv.clientName}</td>
               <td>{inv.currency} {inv.amount.toFixed(2)}</td>
-              <td><span class="badge badge-{inv.status === paid ? online : inv.status === pending ? pending : offline}">{inv.status}</span></td>
+              <td>
+                {#if inv.status === "paid"}
+                  <span class="badge badge-online">paid</span>
+                {:else if inv.status === "pending"}
+                  <span class="badge badge-pending">pending</span>
+                {:else}
+                  <span class="badge badge-offline">{inv.status}</span>
+                {/if}
+              </td>
               <td>{new Date(inv.dueDate).toLocaleDateString()}</td>
+              <td>
+                {#if inv.status === "pending"}
+                  <button
+                    class="pay-btn"
+                    onclick={() => payNow(inv)}
+                    disabled={paying === inv.id}
+                  >
+                    {paying === inv.id ? "Processing..." : "Pay Now"}
+                  </button>
+                {/if}
+              </td>
             </tr>
           {/each}
         </tbody>
@@ -74,4 +124,18 @@
   th { text-align: left; padding: 0.75rem 1rem; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; border-bottom: 1px solid #334155; }
   td { padding: 0.75rem 1rem; font-size: 0.875rem; border-bottom: 1px solid #1e293b; }
   .empty { text-align: center; padding: 3rem; color: #64748b; }
+  
+  .pay-btn {
+    background: #059669;
+    color: white;
+    border: none;
+    padding: 0.4rem 1rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .pay-btn:hover { background: #10b981; }
+  .pay-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 </style>
