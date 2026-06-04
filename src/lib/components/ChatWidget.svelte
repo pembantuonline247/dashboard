@@ -3,6 +3,7 @@
   import type { ChatMessage } from "$lib/types";
 
   let { clientId = "" }: { clientId: string } = $props();
+  let botName = $state("AI Assistant");
   let open = $state(false);
   let messages: ChatMessage[] = $state([]);
   let input = $state("");
@@ -30,9 +31,14 @@
     sending = true;
 
     try {
-      const res = await api.sendChat(clientId, text);
-      messages = [...messages, { role: "assistant", content: res.reply }];
-    } catch {
+      const res = await api.agentChat(clientId, text);
+      const reply = res.reply || res.message || "No response";
+      const agentName = res.agent_name || "Bot";
+      messages = [...messages, { role: "assistant", content: reply }];
+      // Update header to show agent name
+      botName = agentName;
+    } catch (e) {
+      console.error("Chat error:", e);
       messages = [...messages, { role: "assistant", content: "Sorry, I encountered an error. Please try again." }];
     }
     sending = false;
@@ -53,7 +59,7 @@
 {#if open}
   <div class="chat-panel">
     <div class="chat-header">
-      <span>AI Assistant</span>
+      <span>{botName}</span>
       <button class="chat-close" onclick={() => open = false}>✕</button>
     </div>
     <div class="chat-messages" bind:this={chatContainer}>

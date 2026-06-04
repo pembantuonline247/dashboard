@@ -94,3 +94,14 @@ export interface ChatMessage {
   content: string;
   timestamp: string;
 }
+}
+
+export interface AgentConfig {
+  client_id: string;
+  agent_name: string;
+  agent_id: string;
+  system_prompt: string;
+  personality: string;
+  created_at: string | null;
+  updated_at: string | null;
+}

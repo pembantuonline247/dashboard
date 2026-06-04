@@ -2,8 +2,8 @@
   import { onMount } from "svelte";
 
   let { clientId = "" }: { clientId: string } = $props();
-  let files: any[] = [];
-  let uploading = false;
+  let files = $state<any[]>([]);
+  let uploading = $state(false);
 
   async function loadFiles() {
     try {
@@ -33,11 +33,11 @@
 </script>
 
 <div class="media-upload">
-  <h3 class="section-title">Media Uploads</h3>
-  <input type="file" multiple onchange={handleChange} disabled={uploading} />
-  {#if uploading}<p>Uploading…</p>{/if}
+  <h3 class="section-title">Media Management</h3>
+  <input type="file" multiple onchange={handleChange} />
+  {#if uploading}<p>Uploading...</p>{/if}
   <ul class="file-list">
-    {#each files as f}<li>{f.name} – {(f.size/1024).toFixed(1)} KB – {f.type}</li>{/each}
+    {#each files as f}<li>{f.name} - {(f.size / 1024).toFixed(1)} KB - {f.type}</li>{/each}
   </ul>
 </div>
 

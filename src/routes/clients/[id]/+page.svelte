@@ -5,6 +5,7 @@
   import type { Client } from "$lib/types";
   import { api } from "$lib/api";
 import MediaUpload from "$lib/components/MediaUpload.svelte";
+import BotConfig from "$lib/components/BotConfig.svelte";
 
   let client: Client | null = $state(null);
   let loading = $state(true);
@@ -254,6 +255,8 @@ let storageLoading = $state(true);
 
       <!-- Media Upload -->
       <MediaUpload clientId={$page.params.id} />
+
+      <BotConfig clientId={$page.params.id} />
     </div>
   {:else}
     <p style="color:#ef4444">Client not found</p>

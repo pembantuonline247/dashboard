@@ -93,4 +93,13 @@ export const api = {
   async createCheckoutSession(data: { client_id: string; amount: number; description: string }): Promise<any> {
     return fetchJson(`${API}/stripe/create-checkout`, { method: "POST", body: JSON.stringify(data) });
   },
+
+  // Agent (Per-Client Bot)
+  async getAgentConfig(clientId: string): Promise<any> { return fetchJson(`${API}/agent/${clientId}`); },
+  async saveAgentConfig(clientId: string, data: { agent_name: string; personality: string; system_prompt: string }): Promise<any> {
+    return fetchJson(`${API}/agent/${clientId}`, { method: 'POST', body: JSON.stringify(data) });
+  },
+  async agentChat(clientId: string, message: string): Promise<any> {
+    return fetchJson(`${API}/agent/${clientId}/chat`, { method: 'POST', body: JSON.stringify({ message }) });
+  },
 };
