@@ -85,7 +85,7 @@ export const api = {
 
   // Chat
   async sendChat(clientId: string, message: string): Promise<any> {
-    return fetchJson(`${API}/chat`, { method: "POST", body: JSON.stringify({ client_id: clientId, message }) });
+    return fetchJson(`${API}/chat/${clientId}/test`, { method: "POST", body: JSON.stringify({ message }) });
   },
 
   // Stripe

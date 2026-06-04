@@ -4,10 +4,13 @@
   import { goto } from "$app/navigation";
   import type { Client } from "$lib/types";
   import { api } from "$lib/api";
+import MediaUpload from "$lib/components/MediaUpload.svelte";
 
   let client: Client | null = $state(null);
   let loading = $state(true);
   let qrCode = $state("");
+let storage = $state(null);
+let storageLoading = $state(true);
 
   // WhatsApp editor state
   let editingWhatsApp = $state(false);
@@ -24,6 +27,11 @@
         whatsappNumber = client.whatsapp;
       }
     } catch {}
+    try {
+        const sres = await fetch("/api/storage/" + $page.params.id);
+        if (sres.ok) storage = await sres.json();
+      } catch {}
+      storageLoading = false;
     loading = false;
   });
 
@@ -223,6 +231,29 @@
           <p class="qr-hint">Scan this QR code with WhatsApp on your phone</p>
         </div>
       {/if}
+
+      <!-- Storage Usage -->
+      <div class="card">
+        <h3>Storage</h3>
+        {#if storageLoading}
+          <p style="color:#64748b;font-size:0.875rem">Loading…</p>
+        {:else if storage}
+          <p style="font-size:0.875rem">
+            Used {storage.usedMB} / {storage.limitMB} MB ({storage.percentUsed}% used)
+          </p>
+          <div class="storage-bar">
+            <div class="storage-fill" style="width:{Math.min(storage.percentUsed,100)}%"></div>
+          </div>
+          <a href="/products/public" class="btn btn-secondary" style="margin-top:0.75rem;display:inline-block">
+            + Additional Storage
+          </a>
+        {:else}
+          <p style="color:#ef4444;font-size:0.875rem">Could not load storage info</p>
+        {/if}
+      </div>
+
+      <!-- Media Upload -->
+      <MediaUpload clientId={$page.params.id} />
     </div>
   {:else}
     <p style="color:#ef4444">Client not found</p>
@@ -277,4 +308,7 @@
   .btn-secondary:disabled { opacity: 0.5; cursor: not-allowed; }
   .btn-danger { background: transparent; color: #ef4444; border: 1px solid #ef4444; }
   .btn-danger:hover { background: rgba(239, 68, 68, 0.1); }
+
+  .storage-bar { height: 8px; background: #1e293b; border-radius: 4px; margin-top: 0.5rem; overflow: hidden; }
+  .storage-fill { height: 100%; background: #38bdf8; border-radius: 4px; transition: width 0.3s; }
 </style>

@@ -1,6 +1,4 @@
-+++
 export const ssr = false;
-+++
 
 <script lang="ts">
   import { goto } from "$app/navigation";
@@ -23,6 +21,7 @@ export const ssr = false;
   let password = $state("");
   let confirmPassword = $state("");
   let formErrors = $state<Record<string, string>>({});
+  let agreeTerms = $state(false);
 
   // Step 3 - Success
   let successData = $state<{ name: string; credits: number } | null>(null);
@@ -72,6 +71,7 @@ export const ssr = false;
     else if (password.length < 6) errs.password = "Password must be at least 6 characters";
     if (password !== confirmPassword) errs.confirmPassword = "Passwords do not match";
     if (whatsapp && !/^\+?[\d\s\-()]{7,20}$/.test(whatsapp)) errs.whatsapp = "Invalid phone number";
+    if (!agreeTerms) errs.agreeTerms = "You must agree to the Terms & Conditions";
     formErrors = errs;
     return Object.keys(errs).length === 0;
   }
@@ -100,9 +100,19 @@ export const ssr = false;
         throw new Error(errData.error || "Registration failed");
       }
       const data = await res.json();
+
+      // Accept terms & conditions
+      const clientId = data.client?.id;
+      if (clientId) {
+        await fetch(`${API}/legal/accept-terms/${clientId}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+        }).catch(() => {}); // best-effort, don't block on failure
+      }
+
       successData = {
         name: data.user?.name || payload.name,
-        credits: data.user?.credits || data.credits || 0,
+        credits: data.client?.credits || data.credits || 0,
       };
       step = 3;
     } catch (e: any) {
@@ -125,6 +135,10 @@ export const ssr = false;
     if (step === 1) return "Choose your plan";
     if (step === 2) return "Create your account";
     return "Welcome!";
+  }
+
+  function formatPrice(price: number): string {
+    return "RM " + price.toLocaleString("ms-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
 </script>
 
@@ -176,19 +190,19 @@ export const ssr = false;
               >
                 <div class="plan-name">{plan.name || plan.plan_name || "Plan " + (i + 1)}</div>
                 <div class="plan-price">
-                  <span class="currency">Rp</span>
-                  <span class="amount">{(plan.price || 0).toLocaleString("id-ID")}</span>
+                  <span class="currency">RM</span>
+                  <span class="amount">{formatPrice(plan.price || 0)}</span>
                   <span class="period">/month</span>
                 </div>
-                {#if plan.credits}
+                {#if plan.credits_included}
                   <div class="plan-credits">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
                       <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
                     </svg>
-                    {plan.credits.toLocaleString("id-ID")} credits
+                    {plan.credits_included.toLocaleString("ms-MY")} credits
                   </div>
                 {/if}
-                <div class="plan-desc">{(plan.description || plan.deskripsi || "").slice(0, 80)}</div>
+                <div class="plan-desc">{(plan.description || "").slice(0, 80)}</div>
               </button>
             {/each}
           </div>
@@ -252,7 +266,7 @@ export const ssr = false;
               id="whatsapp"
               type="tel"
               bind:value={whatsapp}
-              placeholder="+628123456789"
+              placeholder="+60123456789"
               class:error-input={formErrors.whatsapp}
             />
             {#if formErrors.whatsapp}
@@ -290,6 +304,21 @@ export const ssr = false;
             {/if}
           </div>
 
+          <!-- Terms & Conditions Checkbox -->
+          <div class="field terms-field">
+            <label class="terms-label">
+              <input
+                type="checkbox"
+                bind:checked={agreeTerms}
+                class:error-input={formErrors.agreeTerms}
+              />
+              <span>I agree to the <a href="/legal/terms" target="_blank" class="terms-link">Terms &amp; Conditions</a> and <a href="/legal/privacy" target="_blank" class="terms-link">Privacy Policy</a></span>
+            </label>
+            {#if formErrors.agreeTerms}
+              <span class="field-error">{formErrors.agreeTerms}</span>
+            {/if}
+          </div>
+
           {#if error}
             <div class="error">{error}</div>
           {/if}
@@ -298,7 +327,7 @@ export const ssr = false;
             <button type="button" class="btn-secondary" onclick={goBack}>
               Back
             </button>
-            <button type="submit" class="btn-primary" disabled={loading}>
+            <button type="submit" class="btn-primary" disabled={loading || !agreeTerms}>
               {loading ? "Creating account..." : "Create Account"}
             </button>
           </div>
@@ -324,7 +353,7 @@ export const ssr = false;
           </div>
           <div class="success-card-item">
             <span class="success-card-label">Credits</span>
-            <span class="success-card-value credits">{(successData?.credits || 0).toLocaleString("id-ID")}</span>
+            <span class="success-card-value credits">{(successData?.credits || 0).toLocaleString("ms-MY")}</span>
           </div>
         </div>
 
@@ -450,7 +479,10 @@ export const ssr = false;
   .field { margin-bottom: 1rem; }
   label { display: block; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: #94a3b8; margin-bottom: 0.5rem; }
   .optional { color: #64748b; font-weight: 400; text-transform: none; letter-spacing: 0; }
-  input {
+  input[type="text"],
+  input[type="email"],
+  input[type="tel"],
+  input[type="password"] {
     width: 100%;
     padding: 0.625rem 0.75rem;
     background: #0f172a;
@@ -462,13 +494,52 @@ export const ssr = false;
     transition: border-color 0.2s;
     box-sizing: border-box;
   }
-  input:focus { border-color: #38bdf8; }
-  input.error-input { border-color: #ef4444; }
+  input[type="text"]:focus,
+  input[type="email"]:focus,
+  input[type="tel"]:focus,
+  input[type="password"]:focus { border-color: #38bdf8; }
+  input[type="text"].error-input,
+  input[type="email"].error-input,
+  input[type="tel"].error-input,
+  input[type="password"].error-input { border-color: #ef4444; }
   .field-error {
     display: block;
     color: #ef4444;
     font-size: 0.7rem;
     margin-top: 0.3rem;
+  }
+
+  .terms-field { margin-top: 1rem; }
+  .terms-label {
+    display: flex !important;
+    align-items: flex-start;
+    gap: 0.5rem;
+    font-size: 0.8rem !important;
+    font-weight: 400 !important;
+    text-transform: none !important;
+    letter-spacing: normal !important;
+    color: #94a3b8 !important;
+    cursor: pointer;
+  }
+  .terms-label input[type="checkbox"] {
+    margin-top: 2px;
+    width: 16px;
+    height: 16px;
+    accent-color: #6366f1;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .terms-label input[type="checkbox"].error-input {
+    outline: 2px solid #ef4444;
+    outline-offset: 1px;
+    border-radius: 2px;
+  }
+  .terms-link {
+    color: #38bdf8;
+    text-decoration: none;
+  }
+  .terms-link:hover {
+    text-decoration: underline;
   }
 
   .btn-group {
